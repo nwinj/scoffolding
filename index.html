@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Independent Scaffolding Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    body {
+      margin: 0;
+      padding: 16px;
+      background: #f5f5f7;
+      color: #111827;
+    }
+    h1, h2, h3 {
+      margin-top: 0;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 16px 20px;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+      margin-bottom: 16px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #4b5563;
+      display: block;
+      margin-bottom: 4px;
+    }
+    input {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      font-size: 14px;
+      outline: none;
+      background: #f9fafb;
+    }
+    input:focus {
+      border-color: #2563eb;
+      background: #ffffff;
+      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.3);
+    }
+    .btn {
+      display: inline-block;
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      background: #111827;
+      color: #ffffff;
+      margin-top: 8px;
+    }
+    .btn:active {
+      transform: scale(0.98);
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .summary-item {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #f3f4f6;
+    }
+    .summary-label {
+      font-size: 12px;
+      color: #6b7280;
+    }
+    .summary-value {
+      font-size: 16px;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: 13px;
+    }
+    th, td {
+      border-bottom: 1px solid #e5e7eb;
+      padding: 6px 8px;
+      text-align: left;
+    }
+    th {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: #6b7280;
+      background: #f9fafb;
+    }
+    tr:nth-child(even) td {
+      background: #fafafa;
+    }
+    .right {
+      text-align: right;
+    }
+    .error {
+      color: #b91c1c;
+      font-size: 13px;
+      margin-top: 6px;
+    }
+    .muted {
+      font-size: 12px;
+      color: #6b7280;
+    }
+    @media (max-width: 640px) {
+      body {
+        padding: 8px;
+      }
+      .card {
+        padding: 12px 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Independent Scaffolding Calculator</h1>
+    <p class="muted">
+      Inputs: <strong>Height, Length, Width</strong>. Outputs approximate
+      <strong>manpower</strong>, <strong>materials</strong>, and
+      <strong>loading / safe working load</strong>.
+      <br />
+      <strong>NOTE:</strong> Planning aid only – not a certified design.
+    </p>
+
+    <!-- INPUT CARD -->
+    <div class="card">
+      <h2>Scaffold Dimensions</h2>
+      <div class="grid">
+        <div>
+          <label for="height">Height (m)</label>
+          <input type="number" id="height" step="0.01" value="3" />
+        </div>
+        <div>
+          <label for="length">Length (m)</label>
+          <input type="number" id="length" step="0.01" value="6" />
+        </div>
+        <div>
+          <label for="width">Width (m)</label>
+          <input type="number" id="width" step="0.01" value="1.5" />
+        </div>
+      </div>
+      <button class="btn" id="calcBtn">Calculate</button>
+      <div id="error" class="error"></div>
+    </div>
+
+    <!-- MANPOWER CARD -->
+    <div class="card">
+      <h2>Manpower Estimate</h2>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-label">Scaffold Volume</div>
+          <div class="summary-value" id="mpVolume">– m³</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Total Man-hours</div>
+          <div class="summary-value" id="manHours">– h</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Workers for 1 day (8 h)</div>
+          <div class="summary-value" id="workersDay">– workers</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Time with 4 workers</div>
+          <div class="summary-value" id="timeCrew">– h</div>
+        </div>
+      </div>
+      <p class="muted" style="margin-top:8px;">
+        Assumes productivity of <strong>0.5 man-hours per m³</strong> of scaffolding erected
+        (erection only) and an 8-hour working day. For example, a 4-worker crew finishes faster.
+      </p>
+    </div>
+
+    <!-- MATERIAL CARD -->
+    <div class="card">
+      <h2>Material List (Approximate)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Material</th>
+            <th>Unit</th>
+            <th class="right">Piece Length (m)</th>
+            <th class="right">Quantity</th>
+            <th class="right">Total Length (m)</th>
+          </tr>
+        </thead>
+        <tbody id="materialBody">
+          <!-- filled by JS -->
+        </tbody>
+      </table>
+      <p class="muted">
+        Assumes typical independent scaffold: bay length ≈ 2.0 m, lift (vertical) spacing ≈ 2.0 m,
+        2 rows of standards. Adjust counts to match your company standard if needed.
+      </p>
+    </div>
+
+    <!-- LOADING CARD -->
+    <div class="card">
+      <h2>Loading & Safe Working Load</h2>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-label">Platform Area</div>
+          <div class="summary-value" id="platformArea">– m²</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Design Load Category</div>
+          <div class="summary-value" id="loadCategory">–</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Safe Load per m²</div>
+          <div class="summary-value" id="swlPerM2">– kN/m²</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Total Safe Working Load</div>
+          <div class="summary-value" id="swlTotal">–</div>
+        </div>
+      </div>
+      <p class="muted" style="margin-top:8px;">
+        Uses a typical <strong>medium duty</strong> scaffold value of
+        <strong>2.0 kN/m²</strong> (~200 kg/m²). Always verify with a qualified engineer
+        and relevant standards (e.g., IS / EN scaffolding codes).
+      </p>
+    </div>
+  </div>
+
+  <script>
+    function formatNumber(n, digits = 0) {
+      if (!Number.isFinite(n)) return "–";
+      return n.toLocaleString(undefined, {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits,
+      });
+    }
+
+    function ceilSafe(x) {
+      return Math.ceil(Number.isFinite(x) ? x : 0);
+    }
+
+    function calculate() {
+      const errEl = document.getElementById("error");
+      errEl.textContent = "";
+
+      const h = parseFloat(document.getElementById("height").value);
+      const l = parseFloat(document.getElementById("length").value);
+      const w = parseFloat(document.getElementById("width").value);
+
+      if (!h || !l || !w || h <= 0 || l <= 0 || w <= 0) {
+        errEl.textContent = "Please enter valid positive values for height, length and width.";
+        return;
+      }
+
+      // ---------- BASIC GEOMETRY ----------
+      const volume = h * l * w;          // m³
+      const area = l * w;                // m²
+
+      // ---------- MANPOWER ----------
+      // Assumption: 0.5 man-hours per m³ (erection)
+      const manHours = 0.5 * volume;     // total man-hours
+      const workersForOneDay = Math.max(1, Math.ceil(manHours / 8)); // 1 day = 8 h
+      const crewSize = 4;
+      const timeWithCrewHours = manHours / crewSize;
+
+      document.getElementById("mpVolume").textContent = formatNumber(volume, 2) + " m³";
+      document.getElementById("manHours").textContent = formatNumber(manHours, 2) + " h";
+      document.getElementById("workersDay").textContent = formatNumber(workersForOneDay);
+      document.getElementById("timeCrew").textContent = formatNumber(timeWithCrewHours, 2) + " h";
+
+      // ---------- MATERIAL APPROXIMATION ----------
+      // Assumptions:
+      const bayLength = 2.0;   // m (spacing along length)
+      const liftHeight = 2.0;  // m (vertical spacing)
+      const rows = 2;          // independent scaffold, 2 rows of standards
+
+      const lifts = ceilSafe(h / liftHeight);
+      const bays = ceilSafe(l / bayLength);
+
+      // Standards (verticals)
+      const standardsCount = (bays + 1) * rows * lifts;
+      const standardLength = liftHeight; // 2.0 m each (simplified)
+
+      // Ledgers along length (horizontals)
+      const ledgersPerLift = bays * rows;
+      const ledgersCount = ledgersPerLift * lifts;
+      const ledgerLength = bayLength; // 2.0 m
+
+      // Transoms across width
+      const transomsPerBayPerLift = 2; // simple assumption
+      const transomsCount = bays * lifts * transomsPerBayPerLift;
+      const transomLength = w; // spanning width
+
+      // Braces (diagonals)
+      const bracesCount = Math.max(1, Math.round((bays * lifts) / 2));
+      const braceLength = Math.sqrt(Math.pow(bayLength, 2) + Math.pow(liftHeight, 2)); // diagonal
+
+      // Decking boards along length
+      const boardWidth = 0.225; // 225 mm
+      const boardsAcross = Math.max(1, Math.ceil(w / boardWidth));
+      const boardsCount = boardsAcross * bays;
+      const boardLength = bayLength; // 2.0 m
+
+      // Toe boards (similar to board length)
+      const toeBoardsCount = bays * 2; // both sides
+      const toeBoardLength = bayLength;
+
+      // Base plates/jacks (one per standard)
+      const basePlatesCount = standardsCount;
+
+      // Couplers (very rough)
+      const doubleCouplers = ledgersCount + transomsCount + bracesCount * 2;
+      const swivelCouplers = bracesCount * 2;
+
+      const materialRows = [
+        {
+          name: "Standards (vertical tubes)",
+          unit: "No.",
+          pieceLength: standardLength,
+          quantity: standardsCount,
+        },
+        {
+          name: "Ledgers (along length)",
+          unit: "No.",
+          pieceLength: ledgerLength,
+          quantity: ledgersCount,
+        },
+        {
+          name: "Transoms (across width)",
+          unit: "No.",
+          pieceLength: transomLength,
+          quantity: transomsCount,
+        },
+        {
+          name: "Braces (diagonal)",
+          unit: "No.",
+          pieceLength: braceLength,
+          quantity: bracesCount,
+        },
+        {
+          name: "Decking boards",
+          unit: "No.",
+          pieceLength: boardLength,
+          quantity: boardsCount,
+        },
+        {
+          name: "Toe boards",
+          unit: "No.",
+          pieceLength: toeBoardLength,
+          quantity: toeBoardsCount,
+        },
+        {
+          name: "Base plates / jacks",
+          unit: "No.",
+          pieceLength: 0,
+          quantity: basePlatesCount,
+        },
+        {
+          name: "Double couplers",
+          unit: "No.",
+          pieceLength: 0,
+          quantity: doubleCouplers,
+        },
+        {
+          name: "Swivel couplers",
+          unit: "No.",
+          pieceLength: 0,
+          quantity: swivelCouplers,
+        },
+      ];
+
+      const tbody = document.getElementById("materialBody");
+      tbody.innerHTML = "";
+      materialRows.forEach(row => {
+        const tr = document.createElement("tr");
+
+        const tdName = document.createElement("td");
+        tdName.textContent = row.name;
+
+        const tdUnit = document.createElement("td");
+        tdUnit.textContent = row.unit;
+
+        const tdPiece = document.createElement("td");
+        tdPiece.className = "right";
+        tdPiece.textContent = row.pieceLength > 0 ? formatNumber(row.pieceLength, 2) : "–";
+
+        const tdQty = document.createElement("td");
+        tdQty.className = "right";
+        tdQty.textContent = formatNumber(row.quantity);
+
+        const tdTotalLen = document.createElement("td");
+        tdTotalLen.className = "right";
+        const totalLen = row.pieceLength > 0 ? row.pieceLength * row.quantity : 0;
+        tdTotalLen.textContent = row.pieceLength > 0 ? formatNumber(totalLen, 2) : "–";
+
+        tr.appendChild(tdName);
+        tr.appendChild(tdUnit);
+        tr.appendChild(tdPiece);
+        tr.appendChild(tdQty);
+        tr.appendChild(tdTotalLen);
+        tbody.appendChild(tr);
+      });
+
+      // ---------- LOADING / SAFE WORK LOAD ----------
+      const designLoad = 2.0; // kN/m², medium duty
+      const totalSWL_kN = designLoad * area;
+      const totalSWL_kg = totalSWL_kN * 100; // approx 1 kN ≈ 100 kg
+
+      document.getElementById("platformArea").textContent =
+        formatNumber(area, 2) + " m²";
+      document.getElementById("loadCategory").textContent =
+        "Medium duty platform";
+      document.getElementById("swlPerM2").textContent =
+        formatNumber(designLoad, 1) + " kN/m²";
+      document.getElementById("swlTotal").textContent =
+        formatNumber(totalSWL_kN, 2) + " kN (" +
+        formatNumber(totalSWL_kg, 0) + " kg) total";
+    }
+
+    document.getElementById("calcBtn").addEventListener("click", calculate);
+    window.addEventListener("load", calculate);
+  </script>
+</body>
+</html>
